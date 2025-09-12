@@ -4,6 +4,14 @@
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Unity WebGL Player | Test TG</title>
+
+    <!-- ИЗМЕНЕНИЕ 1: Подключаем официальный скрипт Telegram Web App -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <!-- ИЗМЕНЕНИЕ 2: Добавляем Политику Безопасности Контента (CSP) -->
+    <!-- Это критически важно для работы на GitHub Pages! -->
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-eval' https://telegram.org;">
+
   </head>
   <body style="text-align: center; padding: 0; border: 0; margin: 0;">
     <canvas id="unity-canvas" width=960 height=600 tabindex="-1" style="width: 960px; height: 600px; background: #231F20"></canvas>
@@ -36,5 +44,39 @@
         // devicePixelRatio: 1, // Uncomment this to override low DPI rendering on high DPI displays.
       });
     </script>
+
+    <!-- ИЗМЕНЕНИЕ 3: Добавляем JavaScript-функцию, которую будет вызывать Unity -->
+    <script>
+        function getTelegramId() {
+            try {
+                // Проверяем, что мы запущены внутри Telegram и API доступно
+                if (window.Telegram && window.Telegram.WebApp) {
+                    const tg = window.Telegram.WebApp;
+                    
+                    // Сообщаем Telegram, что приложение готово к отображению
+                    tg.ready();
+                    
+                    // Пытаемся получить ID пользователя
+                    const userId = tg.initDataUnsafe?.user?.id;
+
+                    if (userId) {
+                        // Если ID получен, отправляем его в Unity. 
+                        // unityInstance - это глобальная переменная, созданная скриптом Unity
+                        unityInstance.SendMessage('TelegramManager', 'SetTelegramId', userId.toString());
+                    } else {
+                        // Если ID не получен (например, старая версия клиента)
+                        unityInstance.SendMessage('TelegramManager', 'SetTelegramId', 'ID не найден. Запустите в Telegram.');
+                    }
+                } else {
+                    // Если мы запущены в обычном браузере, а не в Telegram
+                    unityInstance.SendMessage('TelegramManager', 'SetTelegramId', 'API Telegram не доступно.');
+                }
+            } catch (e) {
+                // На случай других непредвиденных ошибок JavaScript
+                unityInstance.SendMessage('TelegramManager', 'SetTelegramId', 'Произошла JS ошибка: ' + e.toString());
+            }
+        }
+    </script>
+
   </body>
 </html>

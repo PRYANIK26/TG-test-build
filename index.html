@@ -4,68 +4,63 @@
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Unity WebGL Player | Test TG</title>
-
-    <!-- 1. Подключаем официальный скрипт Telegram Web App -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
-    <!-- 2. Политика Безопасности Контента (CSP) -->
     <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-eval' 'unsafe-inline' https://telegram.org;">
 
-  </head>
-  <body style="text-align: center; padding: 0; border: 0; margin: 0;">
-    <canvas id="unity-canvas" width=960 height=600 tabindex="-1" style="width: 960px; height: 600px; background: #231F20"></canvas>
-    
-    <!-- ИЗМЕНЕНИЕ 1: Обновлено имя файла загрузчика -->
-    <script src="Build/TG-test-build.loader.js"></script>
-    
-    <script>
-      // Код для адаптации под мобильные устройства (оставляем без изменений)
-      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        var meta = document.createElement('meta');
-        meta.name = 'viewport';
-        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
-        document.getElementsByTagName('head')[0].appendChild(meta);
-
-        var canvas = document.querySelector("#unity-canvas");
-        canvas.style.width = "100%";
-        canvas.style.height = "100%";
-        canvas.style.position = "fixed";
-
-        document.body.style.textAlign = "left";
+    <!-- ИЗМЕНЕНИЕ 1: Добавляем блок стилей -->
+    <style>
+      /* Убираем отступы у страницы, чтобы не было полос прокрутки */
+      html, body {
+        padding: 0;
+        margin: 0;
+        overflow: hidden; /* Запрещаем появление полос прокрутки */
       }
+      /* Заставляем canvas занимать все доступное пространство */
+      #unity-canvas {
+        width: 100vw; /* 100% ширины видимой области */
+        height: 100vh; /* 100% высоты видимой области */
+        position: fixed; /* Фиксируем положение относительно окна */
+        top: 0;
+        left: 0;
+      }
+    </style>
 
-      // БЛОК ЗАПУСКА UNITY
+  </head>
+  <!-- ИЗМЕНЕНИЕ 2: Убираем встроенные стили из body -->
+  <body>
+    <!-- ИЗМЕНЕНИЕ 3: Убираем встроенные стили и размеры из canvas -->
+    <canvas id="unity-canvas" tabindex="-1"></canvas>
+    
+    <script src="Build/TG-test-build.loader.js"></script>
+    <script>
+      // ИЗМЕНЕНИЕ 4: Удаляем ВЕСЬ старый блок if(...) для мобильных устройств,
+      // так как наши новые стили CSS делают то же самое, но для ВСЕХ платформ.
+
       createUnityInstance(document.querySelector("#unity-canvas"), {
-        // ИЗМЕНЕНИЕ 2: Обновлены имена файлов сборки
         dataUrl: "Build/TG-test-build.data",
         frameworkUrl: "Build/TG-test-build.framework.js",
         codeUrl: "Build/TG-test-build.wasm",
-        
         streamingAssetsUrl: "StreamingAssets",
         companyName: "DefaultCompany",
         productName: "Test TG",
         productVersion: "1.0",
       }).then((unity) => {
-        // Эта часть кода выполнится ТОЛЬКО ПОСЛЕ того, как Unity полностью загрузится
-        window.unityInstance = unity; // Сохраняем экземпляр Unity в глобальную переменную
-        getTelegramId(); // Теперь безопасно вызываем нашу функцию для получения ID
+        window.unityInstance = unity;
+        getTelegramId();
       }).catch((error) => {
-        // На случай, если Unity не сможет загрузиться, выведем ошибку в консоль
         console.error("Could not create Unity instance:", error);
       });
     </script>
-
-    <!-- НАША ФУНКЦИЯ ДЛЯ РАБОТЫ С TELEGRAM API -->
     <script>
         function getTelegramId() {
             try {
                 if (window.Telegram && window.Telegram.WebApp) {
                     const tg = window.Telegram.WebApp;
                     tg.ready();
+                    // Сообщаем Telegram, что можно расширить приложение на всю высоту
+                    tg.expand();
                     const userId = tg.initDataUnsafe?.user?.id;
-
                     if (userId) {
-                        // unityInstance здесь уже 100% существует
                         unityInstance.SendMessage('TelegramManager', 'SetTelegramId', userId.toString());
                     } else {
                         unityInstance.SendMessage('TelegramManager', 'SetTelegramId', 'ID не найден. Запустите в Telegram.');
@@ -78,6 +73,5 @@
             }
         }
     </script>
-
   </body>
 </html>

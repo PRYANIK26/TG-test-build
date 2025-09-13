@@ -24,13 +24,18 @@
         productName: "Test TG",
         productVersion: "1.0",
       }).then((unity) => {
-        // Единственная задача этого блока - сохранить глобальную ссылку на экземпляр Unity
-        // Наш .jslib файл будет использовать эту переменную для связи с игрой
+        // Сохраняем глобальную ссылку на экземпляр Unity
         window.unityInstance = unity;
+        
+        // --- КЛЮЧЕВОЕ ИЗМЕНЕНИЕ ---
+        // Теперь, когда мы уверены, что Unity и JS-окружение готовы,
+        // мы даем команду Unity начать процесс инициализации.
+        // Имя объекта 'ServerManager' и метода 'OnUnityReady' должны совпадать с C#.
+        unity.SendMessage('ServerManager', 'OnUnityReady');
+        
       }).catch((error) => {
         console.error("Unity не смог загрузиться:", error);
       });
     </script>
-    <!-- ВЕСЬ СТАРЫЙ JAVASCRIPT-КОД ОТСЮДА УДАЛЕН -->
   </body>
 </html>
